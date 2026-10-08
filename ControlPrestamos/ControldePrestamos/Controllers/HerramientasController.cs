@@ -58,5 +58,20 @@ namespace ControldePrestamos.Controllers
 
             return Ok(herramienta);
         }
+
+        [HttpDelete("{id}")]
+        public IActionResult EliminarHerramienta(int id)
+        {
+            var herramienta = herramientas.FirstOrDefault(h => h.Id == id);
+
+            if (herramienta == null)
+            {
+                return NotFound("Herramienta no encontrada");
+            }
+
+            herramientas.Remove(herramienta);
+
+            return Ok("Herramienta eliminada correctamente");
+        }
     }
 }
