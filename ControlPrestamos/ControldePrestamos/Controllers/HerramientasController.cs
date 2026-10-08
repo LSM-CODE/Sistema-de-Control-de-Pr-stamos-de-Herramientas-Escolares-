@@ -7,7 +7,7 @@ namespace ControldePrestamos.Controllers
     [Route("api/[controller]")]
     public class HerramientasController : ControllerBase
     {
-        private static List<Herramienta> herramientas = new List<Herramienta>
+        public static List<Herramienta> herramientas = new List<Herramienta>
         {
             new Herramienta
             {

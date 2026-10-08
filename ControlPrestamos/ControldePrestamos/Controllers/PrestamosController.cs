@@ -64,5 +64,26 @@ namespace ControldePrestamos.Controllers
 
             return Ok("Préstamo eliminado correctamente");
         }
+        [HttpPut("{id}/devolver")]
+        public IActionResult DevolverHerramienta(int id)
+        {
+            var prestamo = prestamos.FirstOrDefault(p => p.Id == id);
+
+            if (prestamo == null)
+            {
+                return NotFound("Préstamo no encontrado");
+            }
+
+            prestamo.FechaDevolucion = DateTime.Now;
+            var herramienta = HerramientasController.herramientas
+    .FirstOrDefault(h => h.Id == prestamo.HerramientaId);
+
+            if (herramienta != null)
+            {
+                herramienta.Disponible = true;
+            }
+
+            return Ok(prestamo);
+        }
     }
 }
