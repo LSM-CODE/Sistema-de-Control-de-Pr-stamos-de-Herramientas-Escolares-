@@ -1,10 +1,8 @@
 ﻿
-namespace ControldePrestamos.Models
+namespace ControldePrestamos.Dtos
 {
-    public class Herramienta
+    public class HerramientaDto
     {
-        public int Id { get; set; }
-
         public string Nombre { get; set; } = "";
 
         public string Descripcion { get; set; } = "";
