@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+
+using Microsoft.AspNetCore.Mvc;
 using ControldePrestamos.Models;
+using ControldePrestamos.Contexto;
+using ControldePrestamos.Dtos;
 
 namespace ControldePrestamos.Controllers
 {
@@ -7,43 +11,43 @@ namespace ControldePrestamos.Controllers
     [Route("api/[controller]")]
     public class EstudiantesController : ControllerBase
     {
-        private static List<Estudiante> estudiantes = new List<Estudiante>
+        // Conexión con la base de datos.
+        private readonly PrestamosContext _context;
+
+        public EstudiantesController(PrestamosContext context)
         {
-            new Estudiante
-            {
-                Id = 1,
-                Nombre = "Leonardo Soriano",
-                Matricula = "2024-1001",
-                Carrera = "Desarrollo de Software"
-            },
+            _context = context;
+        }
 
-            new Estudiante
-            {
-                Id = 2,
-                Nombre = "María Rodríguez",
-                Matricula = "2024-1002",
-                Carrera = "Multimedia"
-            }
-        };
-
+        // Consulta todos los estudiantes.
         [HttpGet]
         public IActionResult ObtenerEstudiantes()
         {
-            return Ok(estudiantes);
+            return Ok(_context.Estudiantes.ToList());
         }
-        [HttpPost]
-        public IActionResult CrearEstudiante(Estudiante estudiante)
-        {
-            estudiante.Id = estudiantes.Count + 1;
 
-            estudiantes.Add(estudiante);
+        // Registra un estudiante nuevo.
+        [HttpPost]
+        public IActionResult CrearEstudiante(EstudianteDto estudianteDto)
+        {
+            var estudiante = new Estudiante
+            {
+                Nombre = estudianteDto.Nombre,
+                Matricula = estudianteDto.Matricula,
+                Carrera = estudianteDto.Carrera
+            };
+
+            _context.Estudiantes.Add(estudiante);
+            _context.SaveChanges();
 
             return Ok(estudiante);
         }
+
+        // Actualiza los datos de un estudiante.
         [HttpPut("{id}")]
         public IActionResult ActualizarEstudiante(int id, Estudiante estudianteActualizado)
         {
-            var estudiante = estudiantes.FirstOrDefault(e => e.Id == id);
+            var estudiante = _context.Estudiantes.Find(id);
 
             if (estudiante == null)
             {
@@ -54,19 +58,24 @@ namespace ControldePrestamos.Controllers
             estudiante.Matricula = estudianteActualizado.Matricula;
             estudiante.Carrera = estudianteActualizado.Carrera;
 
+            _context.SaveChanges();
+
             return Ok(estudiante);
         }
+
+        // Elimina un estudiante.
         [HttpDelete("{id}")]
         public IActionResult EliminarEstudiante(int id)
         {
-            var estudiante = estudiantes.FirstOrDefault(e => e.Id == id);
+            var estudiante = _context.Estudiantes.Find(id);
 
             if (estudiante == null)
             {
                 return NotFound("Estudiante no encontrado");
             }
 
-            estudiantes.Remove(estudiante);
+            _context.Estudiantes.Remove(estudiante);
+            _context.SaveChanges();
 
             return Ok("Estudiante eliminado correctamente");
         }

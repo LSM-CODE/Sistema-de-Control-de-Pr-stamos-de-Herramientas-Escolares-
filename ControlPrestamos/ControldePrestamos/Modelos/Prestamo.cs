@@ -1,4 +1,5 @@
-﻿namespace ControldePrestamos.Models
+﻿
+namespace ControldePrestamos.Models
 {
     public class Prestamo
     {
@@ -11,5 +12,9 @@
         public DateTime FechaPrestamo { get; set; }
 
         public DateTime? FechaDevolucion { get; set; }
+
+        public Estudiante? Estudiante { get; set; }
+
+        public Herramienta? Herramienta { get; set; }
     }
 }
