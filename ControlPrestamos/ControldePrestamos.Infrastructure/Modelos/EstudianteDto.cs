@@ -1,9 +1,8 @@
-﻿namespace ControldePrestamos.Models
+﻿
+namespace ControldePrestamos.Infrastructure.Modelos
 {
-    public class Estudiante
+    public class EstudianteDto
     {
-        public int Id { get; set; }
-
         public string Nombre { get; set; } = "";
 
         public string Matricula { get; set; } = "";

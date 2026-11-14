@@ -1,35 +1,30 @@
 ﻿
 
 using Microsoft.AspNetCore.Mvc;
-using ControldePrestamos.Models;
-using ControldePrestamos.Contexto;
-using ControldePrestamos.Dtos;
-
+using ControldePrestamos.Domain.Entidades;
+using ControldePrestamos.Domain.Repositorio;
+using ControldePrestamos.Infrastructure.Modelos;
 namespace ControldePrestamos.Controllers
 {
-    // Este controlador maneja las operaciones de las herramientas.
     [ApiController]
     [Route("api/[controller]")]
     public class HerramientasController : ControllerBase
     {
-        // Permite acceder a las tablas de la base de datos.
-        private readonly PrestamosContext _context;
+        private readonly IHerramientaRepositorio _repositorio;
 
-        public HerramientasController(PrestamosContext context)
+        public HerramientasController(IHerramientaRepositorio repositorio)
         {
-            _context = context;
+            _repositorio = repositorio;
         }
 
         // GET: api/Herramientas
-        // Obtiene todas las herramientas registradas.
         [HttpGet]
         public IActionResult ObtenerHerramientas()
         {
-            return Ok(_context.Herramientas.ToList());
+            return Ok(_repositorio.ObtenerTodos());
         }
 
         // POST: api/Herramientas
-        // Registra una nueva herramienta usando los datos del DTO.
         [HttpPost]
         public IActionResult CrearHerramienta(HerramientaDto herramientaDto)
         {
@@ -41,21 +36,17 @@ namespace ControldePrestamos.Controllers
                 Danada = herramientaDto.Danada
             };
 
-            // Agrega la herramienta y guarda los cambios en SQL Server.
-            _context.Herramientas.Add(herramienta);
-            _context.SaveChanges();
+            _repositorio.Agregar(herramienta);
 
             return Ok(herramienta);
         }
 
         // PUT: api/Herramientas/{id}
-        // Busca una herramienta y actualiza sus datos.
         [HttpPut("{id}")]
         public IActionResult ActualizarHerramienta(int id, Herramienta herramientaActualizada)
         {
-            var herramienta = _context.Herramientas.Find(id);
+            var herramienta = _repositorio.ObtenerPorId(id);
 
-            // Si no existe devuelve un error 404
             if (herramienta == null)
             {
                 return NotFound("Herramienta no encontrada");
@@ -66,26 +57,23 @@ namespace ControldePrestamos.Controllers
             herramienta.Disponible = herramientaActualizada.Disponible;
             herramienta.Danada = herramientaActualizada.Danada;
 
-            // Para guardar la actualización en la base de datos
-            _context.SaveChanges();
+            _repositorio.Actualizar(herramienta);
 
             return Ok(herramienta);
         }
 
         // DELETE: api/Herramientas/{id}
-        // Es para eliminar una herramienta por su ID.
         [HttpDelete("{id}")]
         public IActionResult EliminarHerramienta(int id)
         {
-            var herramienta = _context.Herramientas.Find(id);
+            var herramienta = _repositorio.ObtenerPorId(id);
 
             if (herramienta == null)
             {
                 return NotFound("Herramienta no encontrada");
             }
 
-            _context.Herramientas.Remove(herramienta);
-            _context.SaveChanges();
+            _repositorio.Eliminar(id);
 
             return Ok("Herramienta eliminada correctamente");
         }

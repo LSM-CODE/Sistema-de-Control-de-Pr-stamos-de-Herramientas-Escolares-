@@ -1,5 +1,5 @@
 ﻿
-namespace ControldePrestamos.Models
+namespace ControldePrestamos.Domain.Entidades
 {
     public class Prestamo
     {

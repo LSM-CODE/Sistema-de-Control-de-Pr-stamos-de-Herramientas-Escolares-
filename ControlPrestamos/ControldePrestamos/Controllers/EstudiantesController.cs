@@ -1,9 +1,9 @@
 ﻿
 
 using Microsoft.AspNetCore.Mvc;
-using ControldePrestamos.Models;
-using ControldePrestamos.Contexto;
-using ControldePrestamos.Dtos;
+using ControldePrestamos.Domain.Entidades;
+using ControldePrestamos.Domain.Repositorio;
+using ControldePrestamos.Infrastructure.Modelos;
 
 namespace ControldePrestamos.Controllers
 {
@@ -11,19 +11,18 @@ namespace ControldePrestamos.Controllers
     [Route("api/[controller]")]
     public class EstudiantesController : ControllerBase
     {
-        // Conexión con la base de datos.
-        private readonly PrestamosContext _context;
+        private readonly IEstudianteRepositorio _repositorio;
 
-        public EstudiantesController(PrestamosContext context)
+        public EstudiantesController(IEstudianteRepositorio repositorio)
         {
-            _context = context;
+            _repositorio = repositorio;
         }
 
         // Consulta todos los estudiantes.
         [HttpGet]
         public IActionResult ObtenerEstudiantes()
         {
-            return Ok(_context.Estudiantes.ToList());
+            return Ok(_repositorio.ObtenerTodos());
         }
 
         // Registra un estudiante nuevo.
@@ -37,8 +36,7 @@ namespace ControldePrestamos.Controllers
                 Carrera = estudianteDto.Carrera
             };
 
-            _context.Estudiantes.Add(estudiante);
-            _context.SaveChanges();
+            _repositorio.Agregar(estudiante);
 
             return Ok(estudiante);
         }
@@ -47,7 +45,7 @@ namespace ControldePrestamos.Controllers
         [HttpPut("{id}")]
         public IActionResult ActualizarEstudiante(int id, Estudiante estudianteActualizado)
         {
-            var estudiante = _context.Estudiantes.Find(id);
+            var estudiante = _repositorio.ObtenerPorId(id);
 
             if (estudiante == null)
             {
@@ -58,7 +56,7 @@ namespace ControldePrestamos.Controllers
             estudiante.Matricula = estudianteActualizado.Matricula;
             estudiante.Carrera = estudianteActualizado.Carrera;
 
-            _context.SaveChanges();
+            _repositorio.Actualizar(estudiante);
 
             return Ok(estudiante);
         }
@@ -67,15 +65,14 @@ namespace ControldePrestamos.Controllers
         [HttpDelete("{id}")]
         public IActionResult EliminarEstudiante(int id)
         {
-            var estudiante = _context.Estudiantes.Find(id);
+            var estudiante = _repositorio.ObtenerPorId(id);
 
             if (estudiante == null)
             {
                 return NotFound("Estudiante no encontrado");
             }
 
-            _context.Estudiantes.Remove(estudiante);
-            _context.SaveChanges();
+            _repositorio.Eliminar(id);
 
             return Ok("Estudiante eliminado correctamente");
         }

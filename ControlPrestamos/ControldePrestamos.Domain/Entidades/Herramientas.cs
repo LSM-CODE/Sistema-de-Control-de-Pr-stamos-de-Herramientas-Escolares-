@@ -1,6 +1,5 @@
 ﻿
-namespace ControldePrestamos.Models
-{
+namespace ControldePrestamos.Domain.Entidades;
     public class Herramienta
     {
         public int Id { get; set; }
@@ -13,4 +12,5 @@ namespace ControldePrestamos.Models
 
         public bool Danada { get; set; }
     }
-}
+
+ 

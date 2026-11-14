@@ -1,50 +1,54 @@
 ﻿
 
 using Microsoft.AspNetCore.Mvc;
-using ControldePrestamos.Models;
-using ControldePrestamos.Contexto;
-using ControldePrestamos.Dtos;
-
+using ControldePrestamos.Domain.Entidades;
+using ControldePrestamos.Domain.Repositorio;
+using ControldePrestamos.Infrastructure.Modelos;
 namespace ControldePrestamos.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class PrestamosController : ControllerBase
     {
-        // Conexión con la base de datos.
-        private readonly PrestamosContext _context;
+        private readonly IPrestamoRepositorio _prestamoRepositorio;
+        private readonly IEstudianteRepositorio _estudianteRepositorio;
+        private readonly IHerramientaRepositorio _herramientaRepositorio;
 
-        public PrestamosController(PrestamosContext context)
+        public PrestamosController(
+            IPrestamoRepositorio prestamoRepositorio,
+            IEstudianteRepositorio estudianteRepositorio,
+            IHerramientaRepositorio herramientaRepositorio)
         {
-            _context = context;
+            _prestamoRepositorio = prestamoRepositorio;
+            _estudianteRepositorio = estudianteRepositorio;
+            _herramientaRepositorio = herramientaRepositorio;
         }
 
         // Consulta todos los préstamos.
         [HttpGet]
         public IActionResult ObtenerPrestamos()
         {
-            return Ok(_context.Prestamos.ToList());
+            return Ok(_prestamoRepositorio.ObtenerTodos());
         }
 
-        // Registra un préstamo si el estudiante y la herramienta existen.
+        // Registra un préstamo.
         [HttpPost]
         public IActionResult CrearPrestamo(PrestamoDto prestamoDto)
         {
-            var estudiante = _context.Estudiantes.Find(prestamoDto.EstudianteId);
+            var estudiante = _estudianteRepositorio.ObtenerPorId(prestamoDto.EstudianteId);
 
             if (estudiante == null)
             {
                 return NotFound("Estudiante no encontrado");
             }
 
-            var herramienta = _context.Herramientas.Find(prestamoDto.HerramientaId);
+            var herramienta = _herramientaRepositorio.ObtenerPorId(prestamoDto.HerramientaId);
 
             if (herramienta == null)
             {
                 return NotFound("Herramienta no encontrada");
             }
 
-            // Impide prestar herramientas no disponibles o dañadas.
             if (!herramienta.Disponible || herramienta.Danada)
             {
                 return BadRequest("La herramienta no está disponible para préstamo");
@@ -60,8 +64,8 @@ namespace ControldePrestamos.Controllers
 
             herramienta.Disponible = false;
 
-            _context.Prestamos.Add(prestamo);
-            _context.SaveChanges();
+            _herramientaRepositorio.Actualizar(herramienta);
+            _prestamoRepositorio.Agregar(prestamo);
 
             return Ok(prestamo);
         }
@@ -70,7 +74,7 @@ namespace ControldePrestamos.Controllers
         [HttpPut("{id}")]
         public IActionResult ActualizarPrestamo(int id, Prestamo prestamoActualizado)
         {
-            var prestamo = _context.Prestamos.Find(id);
+            var prestamo = _prestamoRepositorio.ObtenerPorId(id);
 
             if (prestamo == null)
             {
@@ -82,7 +86,7 @@ namespace ControldePrestamos.Controllers
             prestamo.FechaPrestamo = prestamoActualizado.FechaPrestamo;
             prestamo.FechaDevolucion = prestamoActualizado.FechaDevolucion;
 
-            _context.SaveChanges();
+            _prestamoRepositorio.Actualizar(prestamo);
 
             return Ok(prestamo);
         }
@@ -91,24 +95,23 @@ namespace ControldePrestamos.Controllers
         [HttpDelete("{id}")]
         public IActionResult EliminarPrestamo(int id)
         {
-            var prestamo = _context.Prestamos.Find(id);
+            var prestamo = _prestamoRepositorio.ObtenerPorId(id);
 
             if (prestamo == null)
             {
                 return NotFound("Préstamo no encontrado");
             }
 
-            _context.Prestamos.Remove(prestamo);
-            _context.SaveChanges();
+            _prestamoRepositorio.Eliminar(id);
 
             return Ok("Préstamo eliminado correctamente");
         }
 
-        // Registra la devolución y vuelve a habilitar la herramienta.
+        // Registra la devolución.
         [HttpPut("{id}/devolver")]
         public IActionResult DevolverHerramienta(int id)
         {
-            var prestamo = _context.Prestamos.Find(id);
+            var prestamo = _prestamoRepositorio.ObtenerPorId(id);
 
             if (prestamo == null)
             {
@@ -120,16 +123,17 @@ namespace ControldePrestamos.Controllers
                 return BadRequest("Este préstamo ya fue devuelto");
             }
 
-            var herramienta = _context.Herramientas.Find(prestamo.HerramientaId);
+            var herramienta = _herramientaRepositorio.ObtenerPorId(prestamo.HerramientaId);
 
             prestamo.FechaDevolucion = DateTime.Now;
 
             if (herramienta != null)
             {
                 herramienta.Disponible = true;
+                _herramientaRepositorio.Actualizar(herramienta);
             }
 
-            _context.SaveChanges();
+            _prestamoRepositorio.Actualizar(prestamo);
 
             return Ok(prestamo);
         }
