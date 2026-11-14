@@ -2,80 +2,98 @@
 
 using Microsoft.AspNetCore.Mvc;
 using ControldePrestamos.Domain.Entidades;
-using ControldePrestamos.Domain.Repositorio;
-using ControldePrestamos.Infrastructure.Modelos;
+using ControldePrestamos.Application.Contract;
+using ControldePrestamos.Application.Dtos;
+
 namespace ControldePrestamos.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class HerramientasController : ControllerBase
     {
-        private readonly IHerramientaRepositorio _repositorio;
+        private readonly IHerramientaService _servicio;
 
-        public HerramientasController(IHerramientaRepositorio repositorio)
+        public HerramientasController(IHerramientaService servicio)
         {
-            _repositorio = repositorio;
+            _servicio = servicio;
         }
 
-        // GET: api/Herramientas
+        // Consulta todas las herramientas.
         [HttpGet]
         public IActionResult ObtenerHerramientas()
         {
-            return Ok(_repositorio.ObtenerTodos());
+            return Ok(_servicio.ObtenerTodos());
         }
 
-        // POST: api/Herramientas
+        // Registra una herramienta.
         [HttpPost]
         public IActionResult CrearHerramienta(HerramientaDto herramientaDto)
         {
-            var herramienta = new Herramienta
+            try
             {
-                Nombre = herramientaDto.Nombre,
-                Descripcion = herramientaDto.Descripcion,
-                Disponible = herramientaDto.Disponible,
-                Danada = herramientaDto.Danada
-            };
+                var herramienta = new Herramienta
+                {
+                    Nombre = herramientaDto.Nombre,
+                    Descripcion = herramientaDto.Descripcion,
+                    Disponible = herramientaDto.Disponible,
+                    Danada = herramientaDto.Danada
+                };
 
-            _repositorio.Agregar(herramienta);
+                _servicio.Agregar(herramienta);
 
-            return Ok(herramienta);
+                return Ok(herramienta);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // PUT: api/Herramientas/{id}
+        // Actualiza una herramienta.
         [HttpPut("{id}")]
         public IActionResult ActualizarHerramienta(int id, Herramienta herramientaActualizada)
         {
-            var herramienta = _repositorio.ObtenerPorId(id);
-
-            if (herramienta == null)
+            try
             {
-                return NotFound("Herramienta no encontrada");
+                var herramienta = _servicio.ObtenerPorId(id);
+
+                if (herramienta == null)
+                    return NotFound("Herramienta no encontrada");
+
+                herramienta.Nombre = herramientaActualizada.Nombre;
+                herramienta.Descripcion = herramientaActualizada.Descripcion;
+                herramienta.Disponible = herramientaActualizada.Disponible;
+                herramienta.Danada = herramientaActualizada.Danada;
+
+                _servicio.Actualizar(herramienta);
+
+                return Ok(herramienta);
             }
-
-            herramienta.Nombre = herramientaActualizada.Nombre;
-            herramienta.Descripcion = herramientaActualizada.Descripcion;
-            herramienta.Disponible = herramientaActualizada.Disponible;
-            herramienta.Danada = herramientaActualizada.Danada;
-
-            _repositorio.Actualizar(herramienta);
-
-            return Ok(herramienta);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // DELETE: api/Herramientas/{id}
+        // Elimina una herramienta.
         [HttpDelete("{id}")]
         public IActionResult EliminarHerramienta(int id)
         {
-            var herramienta = _repositorio.ObtenerPorId(id);
-
-            if (herramienta == null)
+            try
             {
-                return NotFound("Herramienta no encontrada");
+                var herramienta = _servicio.ObtenerPorId(id);
+
+                if (herramienta == null)
+                    return NotFound("Herramienta no encontrada");
+
+                _servicio.Eliminar(id);
+
+                return Ok("Herramienta eliminada correctamente");
             }
-
-            _repositorio.Eliminar(id);
-
-            return Ok("Herramienta eliminada correctamente");
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

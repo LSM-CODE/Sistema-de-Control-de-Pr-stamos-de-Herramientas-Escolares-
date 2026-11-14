@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="ControldePrestamos.Application/ControldePrestamos.Application.csproj" Id="7f5dcc39-e137-42db-a7d9-ea2a7e2931a9" />
   <Project Path="ControldePrestamos.Domain/ControldePrestamos.Domain.csproj" Id="6564c7db-2150-4fe7-a244-aadc61b0f2a3" />
   <Project Path="ControldePrestamos.Infrastructure/ControldePrestamos.Infrastructure.csproj" Id="7b6a76dc-bd96-4ff9-8a30-85712b239e61" />
   <Project Path="ControldePrestamos/ControldePrestamos.csproj" />

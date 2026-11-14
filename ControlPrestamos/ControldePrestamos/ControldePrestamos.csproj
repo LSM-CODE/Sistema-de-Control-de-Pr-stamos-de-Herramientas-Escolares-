@@ -16,6 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\ControldePrestamos.Application\ControldePrestamos.Application.csproj" />
 		<ProjectReference Include="..\ControldePrestamos.Domain\ControldePrestamos.Domain.csproj" />
 		<ProjectReference Include="..\ControldePrestamos.Infrastructure\ControldePrestamos.Infrastructure.csproj" />
 	</ItemGroup>

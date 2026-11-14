@@ -1,141 +1,113 @@
-﻿
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ControldePrestamos.Domain.Entidades;
-using ControldePrestamos.Domain.Repositorio;
-using ControldePrestamos.Infrastructure.Modelos;
+using ControldePrestamos.Application.Contract;
+using ControldePrestamos.Application.Dtos;
+
 namespace ControldePrestamos.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class PrestamosController : ControllerBase
     {
-        private readonly IPrestamoRepositorio _prestamoRepositorio;
-        private readonly IEstudianteRepositorio _estudianteRepositorio;
-        private readonly IHerramientaRepositorio _herramientaRepositorio;
+        private readonly IPrestamoService _servicio;
 
-        public PrestamosController(
-            IPrestamoRepositorio prestamoRepositorio,
-            IEstudianteRepositorio estudianteRepositorio,
-            IHerramientaRepositorio herramientaRepositorio)
+        public PrestamosController(IPrestamoService servicio)
         {
-            _prestamoRepositorio = prestamoRepositorio;
-            _estudianteRepositorio = estudianteRepositorio;
-            _herramientaRepositorio = herramientaRepositorio;
+            _servicio = servicio;
         }
 
         // Consulta todos los préstamos.
         [HttpGet]
         public IActionResult ObtenerPrestamos()
         {
-            return Ok(_prestamoRepositorio.ObtenerTodos());
+            return Ok(_servicio.ObtenerTodos());
         }
 
         // Registra un préstamo.
         [HttpPost]
         public IActionResult CrearPrestamo(PrestamoDto prestamoDto)
         {
-            var estudiante = _estudianteRepositorio.ObtenerPorId(prestamoDto.EstudianteId);
-
-            if (estudiante == null)
+            try
             {
-                return NotFound("Estudiante no encontrado");
+                var prestamo = new Prestamo
+                {
+                    EstudianteId = prestamoDto.EstudianteId,
+                    HerramientaId = prestamoDto.HerramientaId,
+                    FechaPrestamo = DateTime.Now,
+                    FechaDevolucion = null
+                };
+
+                _servicio.Agregar(prestamo);
+
+                return Ok(prestamo);
             }
-
-            var herramienta = _herramientaRepositorio.ObtenerPorId(prestamoDto.HerramientaId);
-
-            if (herramienta == null)
+            catch (ArgumentException ex)
             {
-                return NotFound("Herramienta no encontrada");
+                return BadRequest(ex.Message);
             }
-
-            if (!herramienta.Disponible || herramienta.Danada)
-            {
-                return BadRequest("La herramienta no está disponible para préstamo");
-            }
-
-            var prestamo = new Prestamo
-            {
-                EstudianteId = prestamoDto.EstudianteId,
-                HerramientaId = prestamoDto.HerramientaId,
-                FechaPrestamo = DateTime.Now,
-                FechaDevolucion = null
-            };
-
-            herramienta.Disponible = false;
-
-            _herramientaRepositorio.Actualizar(herramienta);
-            _prestamoRepositorio.Agregar(prestamo);
-
-            return Ok(prestamo);
         }
 
         // Actualiza los datos de un préstamo.
         [HttpPut("{id}")]
         public IActionResult ActualizarPrestamo(int id, Prestamo prestamoActualizado)
         {
-            var prestamo = _prestamoRepositorio.ObtenerPorId(id);
-
-            if (prestamo == null)
+            try
             {
-                return NotFound("Préstamo no encontrado");
+                var prestamo = _servicio.ObtenerPorId(id);
+
+                if (prestamo == null)
+                    return NotFound("Préstamo no encontrado");
+
+                prestamo.EstudianteId = prestamoActualizado.EstudianteId;
+                prestamo.HerramientaId = prestamoActualizado.HerramientaId;
+                prestamo.FechaPrestamo = prestamoActualizado.FechaPrestamo;
+                prestamo.FechaDevolucion = prestamoActualizado.FechaDevolucion;
+
+                _servicio.Actualizar(prestamo);
+
+                return Ok(prestamo);
             }
-
-            prestamo.EstudianteId = prestamoActualizado.EstudianteId;
-            prestamo.HerramientaId = prestamoActualizado.HerramientaId;
-            prestamo.FechaPrestamo = prestamoActualizado.FechaPrestamo;
-            prestamo.FechaDevolucion = prestamoActualizado.FechaDevolucion;
-
-            _prestamoRepositorio.Actualizar(prestamo);
-
-            return Ok(prestamo);
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // Elimina un préstamo.
         [HttpDelete("{id}")]
         public IActionResult EliminarPrestamo(int id)
         {
-            var prestamo = _prestamoRepositorio.ObtenerPorId(id);
-
-            if (prestamo == null)
+            try
             {
-                return NotFound("Préstamo no encontrado");
+                var prestamo = _servicio.ObtenerPorId(id);
+
+                if (prestamo == null)
+                    return NotFound("Préstamo no encontrado");
+
+                _servicio.Eliminar(id);
+
+                return Ok("Préstamo eliminado correctamente");
             }
-
-            _prestamoRepositorio.Eliminar(id);
-
-            return Ok("Préstamo eliminado correctamente");
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // Registra la devolución.
         [HttpPut("{id}/devolver")]
         public IActionResult DevolverHerramienta(int id)
         {
-            var prestamo = _prestamoRepositorio.ObtenerPorId(id);
-
-            if (prestamo == null)
+            try
             {
-                return NotFound("Préstamo no encontrado");
-            }
+                _servicio.Devolver(id);
 
-            if (prestamo.FechaDevolucion != null)
+                return Ok("Herramienta devuelta correctamente");
+            }
+            catch (ArgumentException ex)
             {
-                return BadRequest("Este préstamo ya fue devuelto");
+                return BadRequest(ex.Message);
             }
-
-            var herramienta = _herramientaRepositorio.ObtenerPorId(prestamo.HerramientaId);
-
-            prestamo.FechaDevolucion = DateTime.Now;
-
-            if (herramienta != null)
-            {
-                herramienta.Disponible = true;
-                _herramientaRepositorio.Actualizar(herramienta);
-            }
-
-            _prestamoRepositorio.Actualizar(prestamo);
-
-            return Ok(prestamo);
         }
     }
 }

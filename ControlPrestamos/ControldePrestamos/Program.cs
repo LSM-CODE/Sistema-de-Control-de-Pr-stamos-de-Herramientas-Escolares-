@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using ControldePrestamos.Infrastructure.Contexto;
 using ControldePrestamos.Infrastructure.Repositorios;
 using ControldePrestamos.Domain.Repositorio;
-
+using ControldePrestamos.Application.Contract;
+using ControldePrestamos.Application.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -18,6 +19,9 @@ builder.Services.AddScoped<IHerramientaRepositorio, HerramientaRepositorio>();
 builder.Services.AddScoped<IEstudianteRepositorio, EstudianteRepositorio>();
 builder.Services.AddScoped<IPrestamoRepositorio, PrestamoRepositorio>();
 
+builder.Services.AddScoped<IHerramientaService, HerramientaService>();
+builder.Services.AddScoped<IEstudianteService, EstudianteService>();
+builder.Services.AddScoped<IPrestamoService, PrestamoService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
